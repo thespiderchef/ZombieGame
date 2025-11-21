@@ -221,6 +221,7 @@ char getPlayerMove() {
 void movePlayer(char direction) {
 	int newRow = player.row;
 	int newCol = player.col;
+
 	switch (direction) {
 	case 'W': newRow--; break;
 	case 'S': newRow++; break;
@@ -228,10 +229,31 @@ void movePlayer(char direction) {
 	case 'D': newCol++; break;
 	default: return; // invalid move
 	}
+
 	// Check boundaries and barriers
-	if (newRow >= 0 && newRow < mapRows && newCol >= 0 && newCol < mapCols &&
+	if (newRow >= 0 && newRow < mapRows &&
+		newCol >= 0 && newCol < mapCols &&
 		grid[newRow][newCol] != tileBarrier) {
-		// Update grid
+
+		// Check for resource BEFORE overwriting the tile
+		char destinationTile = grid[newRow][newCol];
+		switch (destinationTile) {
+		case tileFood:
+			player.food++;
+			cout << "You collected food!" << endl;
+			break;
+		case tileHealth:
+			player.health += 20;
+			if (player.health > 100) player.health = 100;
+			cout << "You collected a health kit!" << endl;
+			break;
+		case tileAmmunition:
+			player.ammunition += 5;
+			cout << "You collected ammunition!" << endl;
+			break;
+		}
+
+		// Update grid and player position
 		grid[player.row][player.col] = tileEmpty;
 		player.row = newRow;
 		player.col = newCol;
