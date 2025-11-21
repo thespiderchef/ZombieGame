@@ -14,7 +14,7 @@ const int maxTurns = 50; // maximum number of turns
 const int maxZombies = 5; // maximum number of zombies
 const int minResources = 1; // minimum resources
 const char tileEmpty = '.'; // empty tile representation
-const char tilePlayer = '@'; // player representation
+const char tilePlayer = 'P'; // player representation
 const char tileZombie = 'Z'; // zombie representation
 const char tileBarrier = '#'; // barrier representation
 const char tileFood = 'F'; // food representation
@@ -47,6 +47,9 @@ int remainingTurns = maxTurns;
 bool gameOver = false;
 bool playerWon = false;
 bool playerReachedSafeZone = false;
+int safeZoneRow = -1;
+int safeZoneCol = -1;		// Coordinates of the safe zone, to be set during city generation
+
 
 // Function prototypes
 
@@ -92,8 +95,8 @@ void initialiseGame() {
 	placeZombies();
 
 	player.health = 100;
-	player.food = 3;
-	player.ammunition = 5;
+	player.food = 1;
+	player.ammunition = 1;
 	
 	remainingTurns = maxTurns;
 	gameOver = false;
@@ -110,26 +113,25 @@ void createEmptyMap() {
 }
 
 void generateRandomCity() {
-	// Randomly place barriers, food, health kits, and ammunition on the map
-	for (int r = 0; r < mapRows; ++r) {
-		for (int c = 0; c < mapCols; ++c) {
-			int randNum = rand() % 100;
-			if (randNum < 10) {
-				grid[r][c] = tileBarrier; // 10% chance for barrier
-			}
-			else if (randNum < 15) {
-				grid[r][c] = tileFood; // 5% chance for food
-			}
-			else if (randNum < 20) {
-				grid[r][c] = tileHealth; // 5% chance for health kit
-			}
-			else if (randNum < 25) {
-				grid[r][c] = tileAmmunition; // 5% chance for ammunition
-			}
+// Randomly place barriers, food, health kits, and ammunition on the map
+for (int r = 0; r < mapRows; ++r) {
+	for (int c = 0; c < mapCols; ++c) {
+		int randNum = rand() % 100;
+		if (randNum < 20) {
+			grid[r][c] = tileBarrier; // 20% chance for barrier
+		}
+		else if (randNum < 15) {
+			grid[r][c] = tileFood; // 5% chance for food
+		}
+		else if (randNum < 20) {
+			grid[r][c] = tileHealth; // 5% chance for health kit
+		}
+		else if (randNum < 25) {
+			grid[r][c] = tileAmmunition; // 5% chance for ammunition
 		}
 	}
+}
 // place a single safe zone on the map
-int safeZoneRow, safeZoneCol;
 do {
 	safeZoneRow = rand() % mapRows;
 	safeZoneCol = rand() % mapCols;
@@ -301,7 +303,7 @@ void checkZombieEncounters() {
 	}
 }
 void checkSafeZone() {
-	if (grid[player.row][player.col] == 'S') {
+	if (player.row == safeZoneRow && player.col == safeZoneCol) { //updated to match safe zone coords in global state
 		playerReachedSafeZone = true;
 		gameOver = true;
 		playerWon = true;
