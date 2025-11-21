@@ -289,8 +289,17 @@ void checkZombieEncounters() {
 			if (player.ammunition > 0) {
 				player.ammunition--;
 				zombie.alive = false;
-				grid[zombie.row][zombie.col] = tilePlayer;
+
+				if (player.row == zombie.row && player.col == zombie.col) {
+					grid[zombie.row][zombie.col] = tilePlayer;
+				}
+				else {
+					grid[zombie.row][zombie.col] = tileEmpty;
+				}
+
 				cout << "You encountered a zombie and used ammunition to kill it!" << endl;
+				cin.ignore();
+				cin.get(); // wait for user input
 			}
 			else {
 				player.health -= 20;
@@ -298,6 +307,11 @@ void checkZombieEncounters() {
 				if (player.health <= 0) {
 					gameOver = true;
 				}
+				else {
+					grid[player.row][player.col] = tilePlayer;
+				}
+				cin.ignore();
+				cin.get(); // wait for user input
 			}
 		}
 	}
