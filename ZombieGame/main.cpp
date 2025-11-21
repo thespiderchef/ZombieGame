@@ -250,14 +250,12 @@ void moveZombies() {
 		}
 		// Check boundaries and barriers
 		if (newRow >= 0 && newRow < mapRows && newCol >= 0 && newCol < mapCols &&
-			grid[newRow][newCol] != tileBarrier &&
-			grid[newRow][newCol] != tileZombie &&
-			grid[newRow][newCol] != tilePlayer) {
-			// Update grid
-			grid[zombie.row][zombie.col] = tileEmpty;
+			grid[new.row][new.col] == tileEmpty;) //updated to prevent zombies from overlapping
+			{
+			grid[zombie.row][zombie.col] = tileEmpty; //clear old position
 			zombie.row = newRow;
 			zombie.col = newCol;
-			grid[zombie.row][zombie.col] = tileZombie;
+			grid[zombie.row][zombie.col] = tileZombie; //tile becomes zombie (nom nom)
 		}
 	}
 }
