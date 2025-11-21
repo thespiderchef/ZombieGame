@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <vector>
 #include <cstdlib>
 #include <ctime>
@@ -14,12 +14,12 @@ const int maxTurns = 50; // maximum number of turns
 const int maxZombies = 5; // maximum number of zombies
 const int minResources = 1; // minimum resources
 const char tileEmpty = '.'; // empty tile representation
-const char tilePlayer = 'P'; // player representation
+const char tilePlayer = '@'; // player representation
 const char tileZombie = 'Z'; // zombie representation
 const char tileBarrier = '#'; // barrier representation
-const char tileFood = 'o'; // food representation
+const char tileFood = '*'; // food representation
 const char tileHealth = '+'; // medicine representation
-const char tileAmmunition = 'a'; // ammunition representation
+const char tileAmmunition = '!'; // ammunition representation
 
 // Structure to represent a position on the map
 
@@ -212,9 +212,12 @@ bool isZombieAt(int row, int col) {
 	return false;
 }
 void showStatus() {
-	cout << "Health: " << player.health << " | Food: " << player.food
-		<< " | Ammunition: " << player.ammunition
+	cout << "Get the player (@) to the Safe Zone! (S) | Watch out for Zombies! (Z)"  << endl;
+	cout << "-----------------------------" << endl;
+	cout << "(+) Health: " << player.health << " | (*) Food: " << player.food
+		<< " | (!) Ammunition: " << player.ammunition
 		<< " | Turns Remaining: " << remainingTurns << endl;
+	cout << "-----------------------------" << endl;
 }
 char getPlayerMove() {
 	char move;
