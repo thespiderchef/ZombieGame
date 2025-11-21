@@ -87,6 +87,7 @@ void seedRandom() {
 
 void initialiseGame() {
 	createEmptyMap();
+	generateRandomCity();
 	placePlayer();
 	placeZombies();
 
