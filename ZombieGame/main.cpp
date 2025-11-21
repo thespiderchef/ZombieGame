@@ -250,7 +250,7 @@ void moveZombies() {
 		}
 		// Check boundaries and barriers
 		if (newRow >= 0 && newRow < mapRows && newCol >= 0 && newCol < mapCols &&
-			grid[new.row][new.col] == tileEmpty;) //updated to prevent zombies from overlapping
+			grid[newRow][newCol] == tileEmpty) //updated to prevent zombies from overlapping
 			{
 			grid[zombie.row][zombie.col] = tileEmpty; //clear old position
 			zombie.row = newRow;
