@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <string>
+#include <windows.h>
 
 using namespace std;
 
@@ -13,13 +14,14 @@ const int mapCols = 20;
 const int maxTurns = 50; // maximum number of turns
 const int maxZombies = 5; // maximum number of zombies
 const int minResources = 1; // minimum resources
-const char tileEmpty = '.'; // empty tile representation
-const char tilePlayer = '@'; // player representation
-const char tileZombie = 'Z'; // zombie representation
-const char tileBarrier = '#'; // barrier representation
-const char tileFood = '*'; // food representation
-const char tileHealth = '+'; // medicine representation
-const char tileAmmunition = '!'; // ammunition representation
+const char tileEmpty = '.';        // empty tile representation
+const char tilePlayer = '@';       // player representation
+const char tileZombie = 'Z';       // zombie representation
+const char tileBarrier = '#';      // barrier representation (use '█' if cmd supports it)
+const char tileFood = '*';         // food representation
+const char tileHealth = '+';       // health representation
+const char tileAmmunition = '!';   // ammo representation
+const char tileSafeZone = 'S';     // safe zone representation
 
 // Structure to represent a position on the map
 
@@ -48,8 +50,7 @@ bool gameOver = false;
 bool playerWon = false;
 bool playerReachedSafeZone = false;
 int safeZoneRow = -1;
-int safeZoneCol = -1;		// Coordinates of the safe zone, to be set during city generation
-
+int safeZoneCol = -1; // Coordinates of the safe zone, to be set during city generation
 
 // Function prototypes
 
@@ -74,6 +75,7 @@ void clearScreen();
 // Main function
 
 int main() {
+	SetConsoleOutputCP(65001); // Enable UTF-8 output in Windows CMD
 	seedRandom();
 	initialiseGame();
 	gameLoop();
@@ -96,7 +98,7 @@ void initialiseGame() {
 	player.health = 100;
 	player.food = 1;
 	player.ammunition = 1;
-	
+
 	remainingTurns = maxTurns;
 	gameOver = false;
 	playerWon = false;
@@ -140,7 +142,7 @@ void generateRandomCity() {
 		safeZoneRow = 1 + rand() % (mapRows - 2);
 		safeZoneCol = 1 + rand() % (mapCols - 2);
 	} while (grid[safeZoneRow][safeZoneCol] != tileEmpty);
-	grid[safeZoneRow][safeZoneCol] = 'S';
+	grid[safeZoneRow][safeZoneCol] = tileSafeZone;
 
 	// Ensure minimum resources
 	int resourcesPlaced = 0;
@@ -157,8 +159,8 @@ void generateRandomCity() {
 void placePlayer() {
 	int row, col;
 	do {
-		row = rand() % (mapRows - 2);
-		col = rand() % (mapCols - 2);
+		row = 1 + rand() % (mapRows - 2);
+		col = 1 + rand() % (mapCols - 2);
 	} while (grid[row][col] != tileEmpty);
 	player.row = row;
 	player.col = col;
@@ -169,8 +171,8 @@ void placeZombies() {
 	zombies.clear();
 	int placedZombies = 0;
 	while (placedZombies < maxZombies) {
-		int row = rand() % (mapRows - 2);
-		int col = rand() % (mapCols - 2);
+		int row = 1 + rand() % (mapRows - 2);
+		int col = 1 + rand() % (mapCols - 2);
 		if (grid[row][col] == tileEmpty) {
 			Zombie zombie = { row, col, true };
 			zombies.push_back(zombie);
@@ -179,6 +181,7 @@ void placeZombies() {
 		}
 	}
 }
+
 void gameLoop() {
 	while (!gameOver) {
 		clearScreen();
@@ -195,6 +198,7 @@ void gameLoop() {
 		}
 	}
 }
+
 void drawMap() {
 	for (int r = 0; r < mapRows; ++r) {
 		for (int c = 0; c < mapCols; ++c) {
@@ -203,6 +207,7 @@ void drawMap() {
 		cout << endl;
 	}
 }
+
 bool isZombieAt(int row, int col) {
 	for (const auto& zombie : zombies) {
 		if (zombie.alive && zombie.row == row && zombie.col == col) {
@@ -211,20 +216,23 @@ bool isZombieAt(int row, int col) {
 	}
 	return false;
 }
+
 void showStatus() {
-	cout << "Get the player (@) to the Safe Zone! (S) | Watch out for Zombies! (Z)"  << endl;
-	cout << "-----------------------------" << endl;
+	cout << "Get the player (@) to the Safe Zone (S)! | Avoid Zombies (Z)!" << endl;
+	cout << "-------------------------------------------------------------" << endl;
 	cout << "(+) Health: " << player.health << " | (*) Food: " << player.food
-		<< " | (!) Ammunition: " << player.ammunition
-		<< " | Turns Remaining: " << remainingTurns << endl;
-	cout << "-----------------------------" << endl;
+		<< " | (!) Ammo: " << player.ammunition
+		<< " | Turns Left: " << remainingTurns << endl;
+	cout << "-------------------------------------------------------------" << endl;
 }
+
 char getPlayerMove() {
 	char move;
 	cout << "Enter your move (W/A/S/D): ";
 	cin >> move;
 	return toupper(move);
 }
+
 void moveZombies() {
 	for (auto& zombie : zombies) {
 		if (!zombie.alive) continue;
@@ -237,17 +245,16 @@ void moveZombies() {
 		case 2: newCol--; break; // left
 		case 3: newCol++; break; // right
 		}
-		// Check boundaries and barriers
 		if (newRow >= 0 && newRow < mapRows && newCol >= 0 && newCol < mapCols &&
-			grid[newRow][newCol] == tileEmpty) //updated to prevent zombies from overlapping
-			{
-			grid[zombie.row][zombie.col] = tileEmpty; //clear old position
+			grid[newRow][newCol] == tileEmpty) {
+			grid[zombie.row][zombie.col] = tileEmpty;
 			zombie.row = newRow;
 			zombie.col = newCol;
-			grid[zombie.row][zombie.col] = tileZombie; //tile becomes zombie (nom nom)
+			grid[zombie.row][zombie.col] = tileZombie;
 		}
 	}
 }
+
 void movePlayer(char direction) {
 	int newRow = player.row;
 	int newCol = player.col;
@@ -260,30 +267,24 @@ void movePlayer(char direction) {
 	default: return; // invalid move
 	}
 
-	// Check boundaries and barriers
 	if (newRow >= 0 && newRow < mapRows &&
 		newCol >= 0 && newCol < mapCols &&
 		grid[newRow][newCol] != tileBarrier) {
 
-		// Check for resource BEFORE overwriting the tile - silly me
 		char destinationTile = grid[newRow][newCol];
 		switch (destinationTile) {
 		case tileFood:
 			player.food++;
-			cout << "You collected food!" << endl;
 			break;
 		case tileHealth:
 			player.health += 20;
 			if (player.health > 100) player.health = 100;
-			cout << "You collected a health kit!" << endl;
 			break;
 		case tileAmmunition:
 			player.ammunition += 1;
-			cout << "You collected ammunition!" << endl;
 			break;
 		}
 
-		// Update grid and player position
 		grid[player.row][player.col] = tileEmpty;
 		player.row = newRow;
 		player.col = newCol;
@@ -291,47 +292,35 @@ void movePlayer(char direction) {
 	}
 }
 
-
 void checkZombieEncounters() {
 	for (auto& zombie : zombies) {
 		if (zombie.alive && zombie.row == player.row && zombie.col == player.col) {
 			if (player.ammunition > 0) {
 				player.ammunition--;
 				zombie.alive = false;
-
-				if (player.row == zombie.row && player.col == zombie.col) {
-					grid[zombie.row][zombie.col] = tilePlayer;
-				}
-				else {
-					grid[zombie.row][zombie.col] = tileEmpty;
-				}
-
-				cout << "You encountered a zombie and used ammunition to kill it!" << endl;
-				cin.ignore();
-				cin.get(); // wait for user input
+				grid[zombie.row][zombie.col] = tilePlayer;
 			}
 			else {
 				player.health -= 60;
-				cout << "You encountered a zombie and lost health!" << endl;
 				if (player.health <= 0) {
 					gameOver = true;
 				}
 				else {
 					grid[player.row][player.col] = tilePlayer;
 				}
-				cin.ignore();
-				cin.get(); // wait for user input
 			}
 		}
 	}
 }
+
 void checkSafeZone() {
-	if (player.row == safeZoneRow && player.col == safeZoneCol) { //updated to match safe zone coords in global state
+	if (player.row == safeZoneRow && player.col == safeZoneCol) {
 		playerReachedSafeZone = true;
 		gameOver = true;
 		playerWon = true;
 	}
 }
+
 void showGameOverMessage() {
 	clearScreen();
 	drawMap();
@@ -345,8 +334,9 @@ void showGameOverMessage() {
 		cout << "Game Over! You ran out of time." << endl;
 	}
 }
+
 void clearScreen() {
-	#ifdef _WIN32
+#ifdef _WIN32
 	system("cls");
 #else
 	system("clear");
