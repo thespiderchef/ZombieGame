@@ -264,37 +264,68 @@ void movePlayer(char direction) {
     int newRow = player.row;
     int newCol = player.col;
 
-    switch (direction) {
+    switch (direction) {        //wasn't sure if I could user TUPPER so left both cases
     case 'W':
     case 'w':
         newRow--;
         break;
-
     case 'S':
     case 's':
         newRow++;
         break;
-
     case 'A':
     case 'a':
         newCol--;
         break;
-
     case 'D':
     case 'd':
         newCol++;
         break;
-
     default:
         return; // invalid move
     }
 
     // Check bounds + barriers
     if (newRow >= 0 && newRow < mapRows &&
-        newCol >= 0 && newCol < mapCols &&
-        grid[newRow][newCol] != tileBarrier) {
+        newCol >= 0 && newCol < mapCols) {
+
         char destinationTile = grid[newRow][newCol];
 
+        // Block barriers
+        if (destinationTile == tileBarrier) {
+            return;
+        }
+		// had to change the following the prevent zombies from replacing player on move
+        // If stepping onto a zombie, resolve immediately
+        if (destinationTile == tileZombie) {
+            if (player.ammunition > 0) {
+                player.ammunition--;
+                player.score += 25; // reward for kill
+
+                // Mark the zombie at this tile as dead
+                for (auto& z : zombies) {
+                    if (z.alive && z.row == newRow && z.col == newCol) {
+                        z.alive = false;
+                        break;
+                    }
+                }
+
+				// Move player into that tile, zombie removed
+                grid[player.row][player.col] = tileEmpty;
+                player.row = newRow;
+                player.col = newCol;
+                grid[player.row][player.col] = tilePlayer;
+            }
+            else {
+                // No ammo: take damage, but DO NOT move onto the zombie
+                player.health -= 60;
+                if (player.health <= 0) gameOver = true;
+                if (player.score >= 10) player.score -= 10;
+            }
+            return; 
+        }
+
+        // Otherwise, normal pickups + scoring
         switch (destinationTile) {
         case tileFood:
             player.food++;
@@ -313,15 +344,14 @@ void movePlayer(char direction) {
             break;
 
         case tileSafeZone:
-            // optional small reward here (main bonus happens in checkSafeZone)
-            player.score += 50;
+            player.score += 50; // optional small reward
             break;
 
         default:
             break;
         }
 
-        // Move player on the grid
+        // Move player
         grid[player.row][player.col] = tileEmpty;
         player.row = newRow;
         player.col = newCol;
@@ -330,26 +360,34 @@ void movePlayer(char direction) {
 }
 void checkZombieEncounters() {
     for (auto& zombie : zombies) {
-        if (player.ammunition > 0) {
-            player.ammunition--;
-            zombie.alive = false;
-            player.score += 25;                 // points for killing a zombie
-            grid[zombie.row][zombie.col] = tilePlayer;
-        }
+        if (!zombie.alive) continue;
+
+        // Only trigger an encounter if the zombie is on the player
+        if (zombie.row == player.row && zombie.col == player.col) {
+            if (player.ammunition > 0) {
+                player.ammunition--;
+                zombie.alive = false;
+                player.score += 25;
+
+                // Remove zombie from the map; player stays visible
+                grid[player.row][player.col] = tilePlayer;
+            }
             else {
-            player.health -= 60;
-            player.score -= 10;                 // small penalty for being hit (optional)
-                if (player.score < 0) player.score = 0;
+                player.health -= 60;
+                if (player.score >= 10) player.score -= 10;
 
                 if (player.health <= 0) {
-                gameOver = true;
-            }
-                else {
-                grid[player.row][player.col] = tilePlayer;
+                    gameOver = true;
                 }
+
+                grid[player.row][player.col] = tilePlayer;
             }
+
+            // Only one encounter per turn is enough
+            return;
         }
     }
+}
 
 void checkSafeZone() {
     if (player.row == safeZoneRow && player.col == safeZoneCol) {
