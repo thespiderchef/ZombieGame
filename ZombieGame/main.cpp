@@ -1,5 +1,4 @@
-﻿
-#include <iostream>
+﻿#include <iostream>
 #include <vector>
 #include <cstdlib>
 #include <ctime>
@@ -11,7 +10,7 @@ using namespace std;
 //declaring the constants for the game
 
 const int mapRows = 20; // this is for the grid for the map
-const int mapCols = 20;
+const int mapCols = 30;
 const int maxTurns = 50; // maximum number of turns
 const int maxZombies = 5; // maximum number of zombies
 const int minResources = 1; // minimum resources
@@ -64,7 +63,6 @@ void placePlayer();
 void placeZombies();
 void gameLoop();
 void drawMap();
-bool isZombieAt(int row, int col);
 void showStatus();
 char getPlayerMove();
 void movePlayer(char direction);
@@ -86,29 +84,26 @@ int main() {
 }
 
 // Function definitions
-
-void seedRandom() {
+void seedRandom() { // Seed the random number generator
     srand(static_cast<unsigned int>(time(0)));
 }
-
-void initialiseGame() {
+void initialiseGame() { // Initialise the game state
     createEmptyMap();
     generateRandomCity();
     placePlayer();
     placeZombies();
-
-    player.health = 100;
+	// Initialise player stats
+	player.health = 100;       
     player.food = 1;
     player.ammunition = 1;
     player.score = 0;
-
+	// Initialise game state variables
     remainingTurns = maxTurns;
     gameOver = false;
     playerWon = false;
     playerReachedSafeZone = false;
 }
-
-void createEmptyMap() {
+void createEmptyMap() { // Create an empty map with borders
     for (int r = 0; r < mapRows; ++r) {
         for (int c = 0; c < mapCols; ++c) {
             if (r == 0 || r == mapRows - 1 || c == 0 || c == mapCols - 1) {
@@ -120,12 +115,12 @@ void createEmptyMap() {
         }
     }
 }
-
-void generateRandomCity() {
+void generateRandomCity()   // Generate random city layout with barriers and resources
+{
     for (int r = 1; r < mapRows - 1; ++r) {
         for (int c = 1; c < mapCols - 1; ++c) {
             int randNum = rand() % 100;
-            if (randNum < 20) {
+            if (randNum < 15) {
                 grid[r][c] = tileBarrier;
             }
             else if (randNum < 25) {
@@ -158,8 +153,7 @@ void generateRandomCity() {
         }
     }
 }
-
-void placePlayer() {
+void placePlayer() {    // Place the player at a random empty location
     int row, col;
     do {
         row = 1 + rand() % (mapRows - 2);
@@ -169,14 +163,13 @@ void placePlayer() {
     player.col = col;
     grid[row][col] = tilePlayer;
 }
-
-void placeZombies() {
+void placeZombies() {       // Place zombies at random empty locations
     zombies.clear();
     int placedZombies = 0;
     while (placedZombies < maxZombies) {
         int row = 1 + rand() % (mapRows - 2);
         int col = 1 + rand() % (mapCols - 2);
-        if (grid[row][col] == tileEmpty) {
+		if (grid[row][col] == tileEmpty) {      // only place on empty tiles
             Zombie zombie = { row, col, true };
             zombies.push_back(zombie);
             grid[row][col] = tileZombie;
@@ -184,25 +177,33 @@ void placeZombies() {
         }
     }
 }
-
 void gameLoop() {
     while (!gameOver) {
         clearScreen();
         drawMap();
         showStatus();
+
         char move = getPlayerMove();
         movePlayer(move);
+        if (gameOver) break;
+
         moveZombies();
         checkZombieEncounters();
+        if (gameOver) break;
+
         checkSafeZone();
+        if (gameOver) break;
+
+        // Zombie avoidance / survival score (only awarded if still alive and not already won)
+        player.score += 1;
+
         --remainingTurns;
         if (remainingTurns <= 0) {
             gameOver = true;
         }
     }
 }
-
-void drawMap() {
+void drawMap() {    // Draw the current state of the map
     for (int r = 0; r < mapRows; ++r) {
         for (int c = 0; c < mapCols; ++c) {
             cout << grid[r][c] << ' ';
@@ -210,17 +211,7 @@ void drawMap() {
         cout << endl;
     }
 }
-
-bool isZombieAt(int row, int col) {
-    for (const auto& zombie : zombies) {
-        if (zombie.alive && zombie.row == row && zombie.col == col) {
-            return true;
-        }
-    }
-    return false;
-}
-
-void showStatus() {
+void showStatus() {     // Display player status
     cout << "Get the player (@) to the Safe Zone (S)! | Avoid Zombies (Z)!" << endl;
     cout << "-------------------------------------------------------------" << endl;
     cout << "(+) Health: " << player.health << " | (*) Food: " << player.food
@@ -229,17 +220,15 @@ void showStatus() {
         << " | Turns Left: " << remainingTurns << endl;
     cout << "-------------------------------------------------------------" << endl;
 }
-
-char getPlayerMove() {
+char getPlayerMove() {      // Get player's move input
     char move;
     cout << "Enter your move (W/A/S/D): ";
     cin >> move;
-    return toupper(move);
+    return move;
 }
-
-void moveZombies() {
+void moveZombies() {        // Move each zombie randomly
     for (auto& zombie : zombies) {
-        if (!zombie.alive) continue;
+		if (!zombie.alive) continue;    // skip dead zombies
         int direction = rand() % 4;
         int newRow = zombie.row;
         int newCol = zombie.col;
@@ -249,147 +238,143 @@ void moveZombies() {
         case 2: newCol--; break; // left
         case 3: newCol++; break; // right
         }
-        if (newRow >= 0 && newRow < mapRows && newCol >= 0 && newCol < mapCols &&
-            grid[newRow][newCol] == tileEmpty) {
+		if (newRow >= 0 && newRow < mapRows && newCol >= 0 && newCol < mapCols &&       // Check bounds
+			(grid[newRow][newCol] == tileEmpty || grid[newRow][newCol] == tilePlayer)) {    // Can move onto empty or player tile
+
+            // clear old position
             grid[zombie.row][zombie.col] = tileEmpty;
+
             zombie.row = newRow;
             zombie.col = newCol;
-            grid[zombie.row][zombie.col] = tileZombie;
+
+            // only draw Z if it didn't move onto player (player stays visible)
+            if (grid[newRow][newCol] != tilePlayer) {
+                grid[newRow][newCol] = tileZombie;
+            }
         }
     }
 }
-
-
 void movePlayer(char direction) {
     int newRow = player.row;
     int newCol = player.col;
 
-    switch (direction) {        //wasn't sure if I could user TUPPER so left both cases
-    case 'W':
-    case 'w':
-        newRow--;
-        break;
-    case 'S':
-    case 's':
-        newRow++;
-        break;
-    case 'A':
-    case 'a':
-        newCol--;
-        break;
-    case 'D':
-    case 'd':
-        newCol++;
-        break;
+    switch (direction) {
+    case 'W': case 'w': newRow--; break;
+    case 'S': case 's': newRow++; break;
+    case 'A': case 'a': newCol--; break;
+    case 'D': case 'd': newCol++; break;
     default:
-        return; // invalid move
+        return; // invalid input
     }
 
-    // Check bounds + barriers
-    if (newRow >= 0 && newRow < mapRows &&
-        newCol >= 0 && newCol < mapCols) {
+    // Bounds check
+    if (newRow < 0 || newRow >= mapRows || newCol < 0 || newCol >= mapCols) {
+        return;
+    }
 
-        char destinationTile = grid[newRow][newCol];
+    char destinationTile = grid[newRow][newCol];
 
-        // Block barriers
-        if (destinationTile == tileBarrier) {
-            return;
-        }
-		// had to change the following the prevent zombies from replacing player on move
-        // If stepping onto a zombie, resolve immediately
-        if (destinationTile == tileZombie) {
-            if (player.ammunition > 0) {
-                player.ammunition--;
-                player.score += 25; // reward for kill
+    // Block barriers
+    if (destinationTile == tileBarrier) {
+        return;
+    }
 
-                // Mark the zombie at this tile as dead
-                for (auto& z : zombies) {
-                    if (z.alive && z.row == newRow && z.col == newCol) {
-                        z.alive = false;
-                        break;
-                    }
+    // Zombie encounter (handled immediately)
+    if (destinationTile == tileZombie) {
+        if (player.ammunition > 0) {
+            player.ammunition--;
+            player.score += 25;
+
+            cout << "You used 1 ammo and defeated a zombie! (+25 score)" << endl;
+            Sleep(700);
+
+            // Mark zombie as dead
+            for (auto& z : zombies) {
+                if (z.alive && z.row == newRow && z.col == newCol) {
+                    z.alive = false;
+                    break;
                 }
-
-				// Move player into that tile, zombie removed
-                grid[player.row][player.col] = tileEmpty;
-                player.row = newRow;
-                player.col = newCol;
-                grid[player.row][player.col] = tilePlayer;
             }
-            else {
-                // No ammo: take damage, but DO NOT move onto the zombie
-                player.health -= 60;
-                if (player.health <= 0) gameOver = true;
-                if (player.score >= 10) player.score -= 10;
+
+            // Move player into the tile
+            grid[player.row][player.col] = tileEmpty;
+            player.row = newRow;
+            player.col = newCol;
+            grid[player.row][player.col] = tilePlayer;
+        }
+        else {
+            player.health -= 60;
+            if (player.score >= 10) player.score -= 10;
+
+            cout << "A zombie bites you! (-60 health)" << endl;
+            Sleep(700);
+
+            if (player.health <= 0) {
+                gameOver = true;
             }
-            return; 
         }
-
-        // Otherwise, normal pickups + scoring
-        switch (destinationTile) {
-        case tileFood:
-            player.food++;
-            player.score += 10;
-            break;
-
-        case tileHealth:
-            player.health += 20;
-            if (player.health > 100) player.health = 100;
-            player.score += 15;
-            break;
-
-        case tileAmmunition:
-            player.ammunition += 1;
-            player.score += 8;
-            break;
-
-        case tileSafeZone:
-            player.score += 50; // optional small reward
-            break;
-
-        default:
-            break;
-        }
-
-        // Move player
-        grid[player.row][player.col] = tileEmpty;
-        player.row = newRow;
-        player.col = newCol;
-        grid[player.row][player.col] = tilePlayer;
+        return; 
     }
+
+    // Handle resource pickups / safe zone
+    switch (destinationTile) {
+    case tileFood:
+        player.food++;
+        player.score += 10;
+        break;
+
+    case tileHealth:
+        player.health += 20;
+        if (player.health > 100) player.health = 100;
+        player.score += 15;
+        break;
+
+    case tileAmmunition:
+        player.ammunition++;
+        player.score += 8;
+        break;
+
+    case tileSafeZone:
+        player.score += 50;
+        break;
+
+    default:
+        break;
+    }
+    // Move player normally
+    grid[player.row][player.col] = tileEmpty;
+    player.row = newRow;
+    player.col = newCol;
+    grid[player.row][player.col] = tilePlayer;
 }
-void checkZombieEncounters() {
+void checkZombieEncounters() {      // Check for encounters with zombies
     for (auto& zombie : zombies) {
         if (!zombie.alive) continue;
-
-        // Only trigger an encounter if the zombie is on the player
+                // Only trigger an encounter if the zombie is on the player
         if (zombie.row == player.row && zombie.col == player.col) {
             if (player.ammunition > 0) {
                 player.ammunition--;
                 zombie.alive = false;
                 player.score += 25;
-
                 // Remove zombie from the map; player stays visible
                 grid[player.row][player.col] = tilePlayer;
             }
             else {
                 player.health -= 60;
+                cout << "A zombie attacks you! (-60 health)" << endl;
+				Sleep(700); // Pause to show the message
                 if (player.score >= 10) player.score -= 10;
 
                 if (player.health <= 0) {
                     gameOver = true;
                 }
-
                 grid[player.row][player.col] = tilePlayer;
             }
-
-            // Only one encounter per turn is enough
             return;
         }
     }
 }
-
-void checkSafeZone() {
+void checkSafeZone() {  // Check if player has reached the safe zone
     if (player.row == safeZoneRow && player.col == safeZoneCol) {
         playerReachedSafeZone = true;
         playerWon = true;
@@ -399,8 +384,7 @@ void checkSafeZone() {
         player.score += remainingTurns * 5;
     }
 }
-
-void showGameOverMessage() {
+void showGameOverMessage() {        // Display game over message
     clearScreen();
     drawMap();
     if (playerWon) {
@@ -415,9 +399,7 @@ void showGameOverMessage() {
 
 	cout << "Final Score: " << player.score << endl;  //added final score display based on new system
     }
-
-
-void clearScreen() {
+void clearScreen() {        // Clear the console screen
 #ifdef _WIN32
     system("cls");
 #else
