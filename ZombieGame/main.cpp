@@ -3,7 +3,12 @@
 #include <cstdlib>
 #include <ctime>
 #include <string>
+#ifdef _WIN32
 #include <windows.h>
+#else
+#include <unistd.h>
+#define Sleep(ms) usleep((ms) * 1000)
+#endif
 
 using namespace std;
 
@@ -75,7 +80,9 @@ void clearScreen();
 // Main function
 
 int main() {
+#ifdef _WIN32
     SetConsoleOutputCP(65001); // Enable UTF-8 output in Windows CMD
+#endif
     seedRandom();
     initialiseGame();
     gameLoop();

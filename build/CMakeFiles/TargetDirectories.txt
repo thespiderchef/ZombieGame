@@ -1,0 +1,7 @@
+/workspaces/ZombieGame/build/CMakeFiles/ZombieGame.dir
+/workspaces/ZombieGame/build/CMakeFiles/edit_cache.dir
+/workspaces/ZombieGame/build/CMakeFiles/rebuild_cache.dir
+/workspaces/ZombieGame/build/CMakeFiles/list_install_components.dir
+/workspaces/ZombieGame/build/CMakeFiles/install.dir
+/workspaces/ZombieGame/build/CMakeFiles/install/local.dir
+/workspaces/ZombieGame/build/CMakeFiles/install/strip.dir

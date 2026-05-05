@@ -1,6 +1,8 @@
 # ZombieGame
 
-A small C++ demo game. This repository contains a Visual Studio solution and a simple C++ source file for building and running the game.
+![CI](https://github.com/thespiderchef/ZombieGame/actions/workflows/ci.yml/badge.svg) ![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)
+
+A small C++ demo game. This repository contains a simple C++ source file for building and running the game.
 
 ## Academic note
 
@@ -8,18 +10,19 @@ This project was developed as an assignment for Plymouth University for the COMP
 
 ## Repository layout
 
-- `ZombieGame.sln` — Visual Studio solution
 - `ZombieGame/` — project sources
   - `main.cpp` — game entrypoint
 
 ## Prerequisites
 
 - Linux: `g++` (supports C++17) or `clang++`
-- Windows: Visual Studio (open `ZombieGame.sln`)
+
 
 ## Build & Run (Linux)
 
-From the repository root:
+You can build directly with `g++` for quick runs, or use `CMake` for a cross-platform build.
+
+Quick compile:
 
 ```bash
 # compile the single-source demo
@@ -29,11 +32,23 @@ g++ -std=c++17 -O2 -IZombieGame -o ZombieGame ZombieGame/main.cpp
 ./ZombieGame
 ```
 
-If your project grows, consider adding a `Makefile` or `CMake` configuration.
+CMake (recommended):
 
-## Build & Run (Windows / Visual Studio)
+```bash
+mkdir -p build
+cd build
+cmake ..
+cmake --build . --config Release
 
-Open `ZombieGame.sln` in Visual Studio and build the solution (Debug/Release). Run the produced executable from the IDE or Explorer.
+# run (from build directory)
+./ZombieGame
+```
+
+`CMake` enables building on Windows, Linux, and macOS from the same build files.
+
+## Notes about Visual Studio files
+
+The previous Visual Studio solution and project files have been removed to keep the repository platform-neutral. Use `CMake` (above) to generate platform-specific project files or IDE solutions if needed.
 
 ## Contributing
 
