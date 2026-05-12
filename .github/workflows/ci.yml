@@ -15,7 +15,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+steps:
+  - uses: actions/checkout@v4
 
+  - name: Remove CMake cache/build directory
+    run: rm -rf build
+
+  - name: Configure
+    run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+  # ... (rest of your steps)
       - name: Configure
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 
